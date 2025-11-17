@@ -9,6 +9,8 @@ import Noticias from "./pages/Noticias";
 import Eventos from "./pages/Eventos";
 import Login from "./pages/Login";
 import Panel from "./pages/Panel";
+import Devocional from "./pages/Devocional";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export default function App() {
   return (
@@ -22,8 +24,18 @@ export default function App() {
           <Route path="/recursos" element={<Recursos />} />
           <Route path="/noticias" element={<Noticias />} />
           <Route path="/eventos" element={<Eventos />} />
+          <Route path="/devocional" element={<Devocional />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/panel" element={<Panel />} />
+
+          {/* 🔐 Ruta protegida */}
+          <Route
+            path="/panel"
+            element={
+              <ProtectedRoute>
+                <Panel />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />

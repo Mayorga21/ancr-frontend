@@ -1,8 +1,7 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-
-type Role = "admin" | "pastor" | "iglesia";
 
 type Church = {
   id: number;
@@ -10,38 +9,42 @@ type Church = {
 };
 
 export default function Panel() {
-  const { user, loading } = useAuth();
+  const { profile, loading } = useAuth();
+
   const [churches, setChurches] = useState<Church[]>([]);
   const [globalMsg, setGlobalMsg] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  // ---- estados formularios ----
+  // ---- estados formularios NOTICIAS ----
   const [newsTitle, setNewsTitle] = useState("");
   const [newsSummary, setNewsSummary] = useState("");
   const [newsChurchId, setNewsChurchId] = useState<string>("");
 
+  // ---- estados formularios EVENTOS ----
   const [eventTitle, setEventTitle] = useState("");
   const [eventDesc, setEventDesc] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [eventPlace, setEventPlace] = useState("");
   const [eventChurchId, setEventChurchId] = useState<string>("");
 
+  // ---- estados formularios RECURSOS ----
   const [resTitle, setResTitle] = useState("");
   const [resDesc, setResDesc] = useState("");
   const [resUrl, setResUrl] = useState("");
   const [resCategory, setResCategory] = useState("");
+  const [resFile, setResFile] = useState<File | null>(null);
 
   // ------------------- cargar iglesias que puede usar este usuario -------------------
   useEffect(() => {
     const loadChurches = async () => {
-      if (!user) return;
+      if (!profile) return;
 
       let query = supabase.from("churches").select("id, name");
 
-      if (user.role === "pastor" && user.district_id) {
-        query = query.eq("district_id", user.district_id);
-      } else if (user.role === "iglesia" && user.church_id) {
-        query = query.eq("id", user.church_id);
+      if (profile.role === "pastor" && profile.district_id) {
+        query = query.eq("district_id", profile.district_id);
+      } else if (profile.role === "iglesia" && profile.church_id) {
+        query = query.eq("id", profile.church_id);
       }
       // admin: sin filtros, ve todas
 
@@ -54,8 +57,8 @@ export default function Panel() {
       }
     };
 
-    loadChurches();
-  }, [user]);
+    void loadChurches();
+  }, [profile]);
 
   // ------------------- helpers -------------------
   const resetMessages = () => {
@@ -64,10 +67,10 @@ export default function Panel() {
   };
 
   // ------------------- submit NOTICIA -------------------
-  const handleNewsSubmit = async (e: FormEvent) => {
+  const handleNewsSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     resetMessages();
-    if (!user) return;
+    if (!profile) return;
 
     const church_id =
       newsChurchId === "" ? null : Number.parseInt(newsChurchId, 10);
@@ -76,25 +79,25 @@ export default function Panel() {
       title: newsTitle,
       summary: newsSummary,
       church_id,
-      created_by: user.id,
+      created_by: profile.id,
     });
 
-    if (error) {
-      console.error(error);
-      setGlobalError("No se pudo crear la noticia: " + error.message);
-    } else {
-      setGlobalMsg("Noticia creada correctamente ✅");
-      setNewsTitle("");
-      setNewsSummary("");
-      setNewsChurchId("");
-    }
+if (error) {
+  console.error(error);
+  const msg = "No se pudo crear la noticia: " + (error.message ?? "");
+  setGlobalError(msg);
+  alert(msg);
+} else {
+  // ...
+}
+
   };
 
   // ------------------- submit EVENTO -------------------
-  const handleEventSubmit = async (e: FormEvent) => {
+  const handleEventSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     resetMessages();
-    if (!user) return;
+    if (!profile) return;
 
     const church_id =
       eventChurchId === "" ? null : Number.parseInt(eventChurchId, 10);
@@ -105,45 +108,81 @@ export default function Panel() {
       date: eventDate,
       place: eventPlace,
       church_id,
-      created_by: user.id,
+      created_by: profile.id,
     });
 
-    if (error) {
-      console.error(error);
-      setGlobalError("No se pudo crear el evento: " + error.message);
-    } else {
-      setGlobalMsg("Evento creado correctamente ✅");
-      setEventTitle("");
-      setEventDesc("");
-      setEventDate("");
-      setEventPlace("");
-      setEventChurchId("");
-    }
+if (error) {
+  console.error(error);
+  const msg = "No se pudo crear el evento: " + (error.message ?? "");
+  setGlobalError(msg);
+  alert(msg);
+} else {
+  // ...
+}
+
   };
 
   // ------------------- submit RECURSO (solo admin) -------------------
-  const handleResourceSubmit = async (e: FormEvent) => {
+  const handleResourceSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     resetMessages();
-    if (!user) return;
+    if (!profile) return;
 
-    const { error } = await supabase.from("resources").insert({
-      title: resTitle,
-      description: resDesc || null,
-      url: resUrl,
-      category: resCategory || null,
-      created_by: user.id,
-    });
+    try {
+      let finalUrl = resUrl.trim();
 
-    if (error) {
-      console.error(error);
-      setGlobalError("No se pudo crear el recurso: " + error.message);
-    } else {
-      setGlobalMsg("Recurso creado correctamente ✅");
-      setResTitle("");
-      setResDesc("");
-      setResUrl("");
-      setResCategory("");
+      // Si el usuario adjuntó archivo, lo subimos al bucket "resources"
+      if (resFile) {
+        const fileExt = resFile.name.split(".").pop() ?? "file";
+        const fileName = `${Date.now()}-${profile.id}.${fileExt}`;
+        const filePath = `${profile.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("resources")
+          .upload(filePath, resFile);
+
+        if (uploadError) {
+          console.error(uploadError);
+          setGlobalError(
+            "No se pudo subir el archivo del recurso: " + uploadError.message
+          );
+          return;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("resources").getPublicUrl(filePath);
+
+        finalUrl = publicUrl;
+      }
+
+      if (!finalUrl) {
+        setGlobalError(
+          "Debes adjuntar un archivo o indicar una URL para el recurso."
+        );
+        return;
+      }
+
+      const { error } = await supabase.from("resources").insert({
+        title: resTitle,
+        description: resDesc || null,
+        url: finalUrl,
+        category: resCategory || null,
+        created_by: profile.id,
+      });
+
+if (error) {
+  console.error(error);
+  const msg = "No se pudo crear el recurso: " + (error.message ?? "");
+  setGlobalError(msg);
+  alert(msg);
+} else {
+  // ...
+}
+
+    } catch (err) {
+      console.error(err);
+      setGlobalError("Error inesperado al crear el recurso.");
     }
   };
 
@@ -157,7 +196,7 @@ export default function Panel() {
     );
   }
 
-  if (!user) {
+  if (!profile) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-bold text-[#0A2342] mb-4">
@@ -177,9 +216,8 @@ export default function Panel() {
     );
   }
 
-  const esAdmin = user.role === "admin";
-  const esPastor = user.role === "pastor";
-  const esIglesia = user.role === "iglesia";
+  const esAdmin = profile.role === "admin";
+  const esIglesia = profile.role === "iglesia";
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
@@ -188,8 +226,8 @@ export default function Panel() {
       </h1>
       <p className="text-gray-700">
         Sesión iniciada como{" "}
-        <strong>{user.full_name || "Usuario"}</strong> (
-        <span className="uppercase">{user.role}</span>).
+        <strong>{profile.full_name || "Usuario"}</strong> (
+        <span className="uppercase">{profile.role}</span>).
       </p>
 
       {globalMsg && (
@@ -229,7 +267,6 @@ export default function Panel() {
             />
           </div>
 
-          {/* iglesia/distrito/asociación */}
           <div>
             <label className="block text-sm font-medium">Iglesia</label>
             <select
@@ -237,9 +274,7 @@ export default function Panel() {
               value={newsChurchId}
               onChange={(e) => setNewsChurchId(e.target.value)}
             >
-              {/* opción general solo para admin */}
               {esAdmin && <option value="">ANCR (general)</option>}
-
               {churches.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -358,16 +393,38 @@ export default function Panel() {
                 onChange={(e) => setResDesc(e.target.value)}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium">URL</label>
+              <label className="block text-sm font-medium">
+                Archivo (PDF, Word, PowerPoint, etc.)
+              </label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.odt,.odp,.ods"
+                className="mt-1 w-full border rounded-lg px-3 py-2"
+                onChange={(e) =>
+                  setResFile(e.target.files ? e.target.files[0] : null)
+                }
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Puedes adjuntar un archivo, o dejarlo vacío y usar una URL
+                externa.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">
+                URL (opcional si adjuntas archivo)
+              </label>
               <input
                 type="url"
                 className="mt-1 w-full border rounded-lg px-3 py-2"
                 value={resUrl}
                 onChange={(e) => setResUrl(e.target.value)}
-                required
+                placeholder="https://..."
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium">Categoría</label>
               <input

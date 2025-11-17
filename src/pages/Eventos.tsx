@@ -1,26 +1,46 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+type EventItem = {
+  id: number;
+  title: string;
+  description: string | null;
+  date: string;
+  place: string;
+  church_id: number | null;
+  churches?: {
+    name: string;
+  } | null;
+};
+
 export default function Eventos() {
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
 
   useEffect(() => {
     const load = async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
           date,
           place,
           church_id,
-          churches(name)
-        `)
+          churches ( name )
+        `
+        )
+        .returns<EventItem[]>() // 👈 aquí le decimos a TS qué viene
         .order("date", { ascending: true });
 
-      if (error) console.error(error);
-      else setEvents(data || []);
+      if (error) {
+        console.error(error);
+        setEvents([]);
+        return;
+      }
+
+      setEvents(data ?? []); // data es EventItem[] | null → lo forzamos a []
     };
 
     load();
@@ -34,7 +54,7 @@ export default function Eventos() {
         <p>No hay eventos registrados.</p>
       ) : (
         <div className="space-y-5">
-          {events.map((e: any) => (
+          {events.map((e) => (
             <article key={e.id} className="bg-white p-4 shadow rounded-lg">
               <h2 className="text-xl font-bold text-[#0A2342]">{e.title}</h2>
 
