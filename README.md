@@ -1,73 +1,162 @@
-# React + TypeScript + Vite
+📘 ANCR – Sitio Oficial de la Asociación Norte de Costa Rica
+Proyecto Web · Iglesia Adventista del Séptimo Día
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este es el código del sitio web oficial de la Asociación Norte de Costa Rica (ANCR), diseñado para ofrecer noticias, recursos, eventos y herramientas internas para el Ministerio Joven y otros departamentos de la iglesia.
 
-Currently, two official plugins are available:
+El proyecto está construido con una arquitectura moderna basada en:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+React + Vite (Frontend rápido y modular)
 
-## React Compiler
+Tailwind CSS (Estilos responsivos y diseño limpio)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Supabase (Base de datos, autenticación y almacenamiento)
 
-## Expanding the ESLint configuration
+TypeScript (Robustez y tipado estático)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+🖥️ Características principales
+✔️ Diseño institucional profesional
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Inspirado en páginas oficiales de la Iglesia Adventista (UMCH, Unión Mexicana, Unión Chilena).
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+✔️ Hero dinámico + Banner informativo
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Secciones configuradas con colores institucionales (azul y dorado).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+✔️ Noticias en tiempo real
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Cargadas desde Supabase usando consultas directas.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+✔️ Eventos del Ministerio Joven
+
+Mostrados cronológicamente desde la base de datos.
+
+✔️ Código modular y fácil de extender
+
+Componentes separados: Navbar, Footer, Home, Recursos, Noticias, Eventos.
+
+✔️ Preparado para autenticación
+
+Lista para integrarse con Supabase Auth (email, Google, etc.).
+
+🏗️ Tecnologías
+Tecnología	Uso
+React + Vite	SPA moderna y rápida
+TypeScript	Mejores tipos y seguridad
+Tailwind CSS	Estilos utilitarios
+Supabase	BD, API y autenticación
+PostCSS	Estilos procesados
+Vercel / Netlify	(Opcional) despliegue del frontend
+📁 Estructura del proyecto
+ancr-frontend/
+ ├── public/
+ ├── src/
+ │   ├── assets/
+ │   ├── components/
+ │   │   ├── Navbar.tsx
+ │   │   └── Footer.tsx
+ │   ├── pages/
+ │   │   ├── Home.tsx
+ │   │   ├── Noticias.tsx
+ │   │   ├── Eventos.tsx
+ │   │   ├── Recursos.tsx
+ │   │   └── NuestraIglesia.tsx
+ │   ├── supabaseClient.ts
+ │   ├── main.tsx
+ │   └── App.tsx
+ ├── .env
+ ├── package.json
+ ├── tailwind.config.js
+ ├── vite.config.ts
+ └── README.md
+
+⚙️ Configuración del entorno
+1. Instalar dependencias:
+npm install
+
+2. Crear archivo .env en la raíz del frontend:
+VITE_SUPABASE_URL=https://TUPROYECTO.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_clave_anon_publica
+
+
+⚠️ El archivo .env está en .gitignore, por lo que NO se subirá a GitHub para proteger tus claves.
+
+3. Ejecutar en modo desarrollo:
+npm run dev
+
+
+Aplicación disponible en:
+
+http://localhost:5173
+
+🗄️ Base de datos en Supabase
+Tablas principales
+news
+create table news (
+  id bigint generated always as identity primary key,
+  title text not null,
+  summary text not null,
+  created_at timestamp with time zone default now()
+);
+
+events
+create table events (
+  id bigint generated always as identity primary key,
+  title text not null,
+  date date not null,
+  place text
+);
+
+🔌 Conexión con Supabase
+
+El archivo supabaseClient.ts crea el cliente global:
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+📰 Cargar noticias (ejemplo)
+const { data: news } = await supabase
+  .from("news")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+☁️ Despliegue recomendado
+✔️ Frontend → Vercel
+
+Rápido, gratuito y optimizado para Vite.
+
+Pasos:
+
+Conectar el repo de GitHub
+
+Crear variables de entorno en el panel de Vercel
+
+Deploy automático con cada push
+
+🛠️ Próximas funcionalidades sugeridas
+
+✔ Autenticación con Supabase Auth
+
+✔ Panel administrativo (Dashboard)
+
+✔ CRUD de noticias y eventos
+
+✔ Subida de imágenes (Supabase Storage)
+
+✔ Páginas de departamentos y clubes
+
+✔ Sistema de roles: Administrador / Líder / Miembro
+
+📄 Licencia
+
+Proyecto para fines educativos y misioneros.
+Cualquier iglesia o ministerio puede usarlo y adaptarlo.
+
+🙌 Autor
+
+Desarrollado por Kemuel Mayorga Hernández
+Para la Asociación Norte de Costa Rica
+Iglesia Adventista del Séptimo Día.

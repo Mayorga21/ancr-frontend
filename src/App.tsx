@@ -8,6 +8,7 @@ import Recursos from "./pages/Recursos";
 import Noticias from "./pages/Noticias";
 import Eventos from "./pages/Eventos";
 import Login from "./pages/Login";
+import Panel from "./pages/Panel";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/noticias" element={<Noticias />} />
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/panel" element={<Panel />} />
         </Routes>
       </main>
       <Footer />
