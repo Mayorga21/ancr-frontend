@@ -23,13 +23,13 @@ export default function Home() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
-              href="/noticias"
+              href="/Noticias"
               className="px-5 py-2.5 rounded-lg bg-[#F6A623] text-[#0A2342] font-semibold hover:bg-white hover:text-[#0A2342] transition-all"
             >
               Ver noticias
             </a>
             <a
-              href="/eventos"
+              href="/Eventos"
               className="px-5 py-2.5 rounded-lg border border-white/70 text-white hover:bg-white hover:text-[#0A2342] transition-all"
             >
               Próximos eventos
